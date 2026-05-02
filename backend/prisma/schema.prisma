@@ -1,0 +1,320 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  address   String?
+  phone     String?
+  email     String?
+  users     User[]
+  classes   Class[]
+  subjects  Subject[]
+  students  Student[]
+  teachers  Teacher[]
+  exams     Exam[]
+  feeStructures FeeStructure[]
+  announcements Announcement[]
+  academicYears AcademicYear[]
+  plan          String   @default("STARTER")
+  maxStudents   Int      @default(200)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id            String    @id @default(uuid())
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id])
+  role          String    @default("STUDENT")
+  fullName      String
+  email         String    @unique
+  phone         String?
+  passwordHash  String
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  student       Student?
+  teacher       Teacher?
+  guardian      Guardian?
+  markedAttendance Attendance[] @relation("MarkedBy")
+  createdLeaves Leave[]      @relation("UserLeaves")
+  approvedLeaves Leave[]     @relation("ApprovedBy")
+  announcements Announcement[]
+  auditLogs     AuditLog[]
+  payments      Payment[]    @relation("ReceivedBy")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  name      String
+  orderNo   Int?
+  sections  Section[]
+  subjects  ClassSubject[]
+  enrollments Enrollment[]
+  feeStructures FeeStructure[]
+  examSubjects ExamSubject[]
+}
+
+model Section {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  name      String
+  enrollments Enrollment[]
+  timetables Timetable[]
+}
+
+model Subject {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  name      String
+  code      String?
+  classSubjects ClassSubject[]
+  examSubjects  ExamSubject[]
+  timetables    Timetable[]
+}
+
+model ClassSubject {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+}
+
+model Student {
+  id           String   @id @default(uuid())
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id])
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  admissionNo  String   @unique
+  dob          DateTime?
+  gender       String?
+  bloodGroup   String?
+  address      String?
+  joinDate     DateTime @default(now())
+  status       String   @default("ACTIVE")
+  guardians    StudentGuardian[]
+  enrollments  Enrollment[]
+  invoices     Invoice[]
+}
+
+model Guardian {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  occupation   String?
+  annualIncome String?
+  students     StudentGuardian[]
+}
+
+model StudentGuardian {
+  id           String   @id @default(uuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id])
+  guardianId   String
+  guardian     Guardian @relation(fields: [guardianId], references: [id])
+  relationType String
+  isPrimary    Boolean  @default(false)
+}
+
+model Teacher {
+  id            String   @id @default(uuid())
+  schoolId      String
+  school        School   @relation(fields: [schoolId], references: [id])
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  employeeCode  String   @unique
+  qualification String?
+  hireDate      DateTime?
+  salary        Float?
+  classSubjects ClassSubject[]
+  timetables    Timetable[]
+}
+
+model Enrollment {
+  id             String   @id @default(uuid())
+  studentId      String
+  student        Student  @relation(fields: [studentId], references: [id])
+  classId        String
+  class          Class    @relation(fields: [classId], references: [id])
+  sectionId      String
+  section        Section  @relation(fields: [sectionId], references: [id])
+  academicYearId String
+  rollNo         String?
+  status         String   @default("ACTIVE")
+  attendance     Attendance[]
+  marks          Marks[]
+}
+
+model Timetable {
+  id        String   @id @default(uuid())
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id])
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id])
+  dayOfWeek Int
+  startTime String
+  endTime   String
+}
+
+model Attendance {
+  id             String           @id @default(uuid())
+  enrollmentId   String
+  enrollment     Enrollment       @relation(fields: [enrollmentId], references: [id])
+  attendanceDate DateTime
+  status         String
+  markedById     String
+  markedBy       User             @relation("MarkedBy", fields: [markedById], references: [id])
+}
+
+model Exam {
+  id             String   @id @default(uuid())
+  schoolId       String
+  school         School   @relation(fields: [schoolId], references: [id])
+  academicYearId String
+  name           String
+  startDate      DateTime?
+  endDate        DateTime?
+  examSubjects   ExamSubject[]
+}
+
+model ExamSubject {
+  id          String   @id @default(uuid())
+  examId      String
+  exam        Exam     @relation(fields: [examId], references: [id])
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id])
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  maxMarks    Float
+  passMarks   Float
+  examDate    DateTime?
+  marks       Marks[]
+}
+
+model Marks {
+  id             String      @id @default(uuid())
+  examSubjectId  String
+  examSubject    ExamSubject @relation(fields: [examSubjectId], references: [id])
+  enrollmentId   String
+  enrollment     Enrollment  @relation(fields: [enrollmentId], references: [id])
+  obtainedMarks  Float
+  grade          String?
+  remarks        String?
+}
+
+model FeeStructure {
+  id             String   @id @default(uuid())
+  schoolId       String
+  school         School   @relation(fields: [schoolId], references: [id])
+  classId        String
+  class          Class    @relation(fields: [classId], references: [id])
+  academicYearId String
+  feeType        String
+  amount         Float
+  dueFrequency   String
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  studentId      String
+  student        Student       @relation(fields: [studentId], references: [id])
+  academicYearId String
+  invoiceNo      String        @unique
+  issueDate      DateTime      @default(now())
+  dueDate        DateTime
+  totalAmount    Float
+  status         String        @default("UNPAID")
+  items          InvoiceItem[]
+  payments       Payment[]
+}
+
+model InvoiceItem {
+  id        String  @id @default(uuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  feeType   String
+  amount    Float
+  discount  Float   @default(0)
+  fine      Float   @default(0)
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  invoiceId     String
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id])
+  paidAmount    Float
+  paymentDate   DateTime @default(now())
+  paymentMethod String
+  transactionRef String?
+  receivedById  String
+  receivedBy    User     @relation("ReceivedBy", fields: [receivedById], references: [id])
+}
+
+model Announcement {
+  id           String   @id @default(uuid())
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id])
+  title        String
+  message      String
+  audienceType String
+  createdById  String
+  createdBy    User     @relation(fields: [createdById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model Leave {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation("UserLeaves", fields: [userId], references: [id])
+  fromDate     DateTime
+  toDate       DateTime
+  reason       String?
+  status       String   @default("PENDING")
+  approvedById String?
+  approvedBy   User?    @relation("ApprovedBy", fields: [approvedById], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityName String
+  entityId   String
+  beforeData String?
+  afterData  String?
+  createdAt  DateTime @default(now())
+}

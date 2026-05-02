@@ -1,0 +1,14 @@
+import { Request, Response } from 'express';
+export declare const createSchool: (req: Request, res: Response) => Promise<void>;
+export declare const getSchools: (req: Request, res: Response) => Promise<void>;
+export declare const getClasses: (req: Request, res: Response) => Promise<void>;
+export declare const createClass: (req: Request, res: Response) => Promise<void>;
+export declare const updateClass: (req: Request, res: Response) => Promise<void>;
+export declare const deleteClass: (req: Request, res: Response) => Promise<void>;
+export declare const getSections: (req: Request, res: Response) => Promise<void>;
+export declare const createSection: (req: Request, res: Response) => Promise<void>;
+export declare const deleteSection: (req: Request, res: Response) => Promise<void>;
+export declare const getSubjects: (req: Request, res: Response) => Promise<void>;
+export declare const createSubject: (req: Request, res: Response) => Promise<void>;
+export declare const deleteSubject: (req: Request, res: Response) => Promise<void>;
+export declare const createEnrollment: (req: Request, res: Response) => Promise<void>;
