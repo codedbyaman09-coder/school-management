@@ -16,7 +16,7 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.use(cors()); // Allow all for development
 app.use(express.json());
@@ -64,3 +64,5 @@ process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit();
 });
+
+// trigger restart 2

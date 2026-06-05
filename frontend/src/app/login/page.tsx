@@ -22,6 +22,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const {
     register,
@@ -33,6 +34,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setApiError("");
     try {
       const response = await api.post("/auth/login", data);
       const { token, user } = response.data;
@@ -41,7 +43,7 @@ export default function LoginPage() {
       window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Login failed:", error);
-      alert(error.response?.data?.error || "Login failed. Please check your credentials.");
+      setApiError(error.response?.data?.error || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +65,11 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {apiError && (
+              <div className="p-3 bg-red-100/50 text-red-600 border border-red-200 rounded-xl text-sm font-bold text-center">
+                {apiError}
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Command Input: Email</label>
               <div className="relative">
